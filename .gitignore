@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+bot.log
+bot.err
+bot2.log
+bot2.err
+output.log
+error.log
+.env
+credentials.json
