@@ -29,11 +29,11 @@ HEADERS = [
 class SheetsClient:
     """Client for saving and retrieving cost calculations from Google Sheets."""
 
-    def __init__(self, credentials_path: str, spreadsheet_id: str) -> None:
+    def __init__(self, credentials_json: str, spreadsheet_id: str) -> None:
         """Initialise the client with service-account credentials.
 
         Args:
-            credentials_path: Path to the Google service account JSON file.
+            credentials_json: JSON string of the service account credentials.
             spreadsheet_id: ID of the target Google Spreadsheet.
         """
         self.spreadsheet_id = spreadsheet_id
@@ -41,7 +41,8 @@ class SheetsClient:
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive",
         ]
-        creds = Credentials.from_service_account_file(credentials_path, scopes=scope)
+        info = json.loads(credentials_json)
+        creds = Credentials.from_service_account_info(info, scopes=scope)
         self.client = gspread.authorize(creds)
 
     def _ensure_sheet(self) -> gspread.Worksheet:

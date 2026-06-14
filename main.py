@@ -10,7 +10,13 @@ from telegram.ext import Application, CommandHandler
 from bot.handlers import handler as conversation_handler
 from bot.handlers import history
 from bot.sheets_client import SheetsClient
-from config import BOT_TOKEN, GOOGLE_CREDENTIALS_PATH, SPREADSHEET_ID, WEBHOOK_URL
+from config import (
+    BOT_TOKEN,
+    GOOGLE_CREDENTIALS_JSON,
+    GOOGLE_CREDENTIALS_PATH,
+    SPREADSHEET_ID,
+    WEBHOOK_URL,
+)
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -28,16 +34,22 @@ def main() -> None:
     app = Application.builder().token(BOT_TOKEN).build()
 
     sheets_client = None
-    if SPREADSHEET_ID and os.path.isfile(GOOGLE_CREDENTIALS_PATH):
+    if not SPREADSHEET_ID:
+        logger.warning("SPREADSHEET_ID not set — Sheets disabled.")
+    else:
         try:
-            sheets_client = SheetsClient(GOOGLE_CREDENTIALS_PATH, SPREADSHEET_ID)
-            logger.info("Google Sheets client initialised.")
+            creds = GOOGLE_CREDENTIALS_JSON or (
+                open(GOOGLE_CREDENTIALS_PATH, encoding="utf-8").read()
+                if GOOGLE_CREDENTIALS_PATH and os.path.isfile(GOOGLE_CREDENTIALS_PATH)
+                else ""
+            )
+            if creds:
+                sheets_client = SheetsClient(creds, SPREADSHEET_ID)
+                logger.info("Google Sheets client initialised.")
+            else:
+                logger.warning("No Google credentials found — Sheets disabled.")
         except Exception as exc:
             logger.warning("Failed to initialise Sheets client: %s", exc)
-    else:
-        logger.warning(
-            "SPREADSHEET_ID or credentials file missing — Sheets disabled."
-        )
 
     app.bot_data["sheets_client"] = sheets_client
 
